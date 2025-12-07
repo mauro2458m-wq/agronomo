@@ -1,13 +1,4 @@
-
 import { GoogleGenAI } from "@google/genai";
-
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  throw new Error("API_KEY is not defined. Please set it in your environment variables.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 const getPrompt = (crop: string, topic: 'pragas' | 'defensivos'): string => {
   if (topic === 'pragas') {
@@ -36,6 +27,14 @@ const getPrompt = (crop: string, topic: 'pragas' | 'defensivos'): string => {
 };
 
 export const fetchCropInfo = async (crop: string, topic: 'pragas' | 'defensivos'): Promise<string> => {
+  const API_KEY = process.env.API_KEY;
+
+  if (!API_KEY) {
+    throw new Error("A chave de API do Gemini não está configurada. Verifique suas variáveis de ambiente.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+
   try {
     const prompt = getPrompt(crop, topic);
     const response = await ai.models.generateContent({
@@ -43,14 +42,18 @@ export const fetchCropInfo = async (crop: string, topic: 'pragas' | 'defensivos'
         contents: prompt,
     });
     
-    if (response.text) {
-        return response.text;
+    const text = response.text;
+    if (text) {
+        return text;
     }
     
     return "Não foi possível obter uma resposta da IA.";
 
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-    throw new Error("A comunicação com o serviço de IA falhou.");
+    if (error instanceof Error) {
+        throw new Error(`A comunicação com o serviço de IA falhou: ${error.message}`);
+    }
+    throw new Error("A comunicação com o serviço de IA falhou por um motivo desconhecido.");
   }
 };

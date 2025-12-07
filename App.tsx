@@ -39,7 +39,11 @@ const App: React.FC = () => {
       const content = await fetchCropInfo(selectedCrop.name, selectedTopic);
       setGeneratedContent(content);
     } catch (err) {
-      setError('Falha ao buscar informações. Verifique sua chave de API e tente novamente.');
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Ocorreu um erro desconhecido ao buscar informações.');
+      }
       console.error(err);
     } finally {
       setIsLoading(false);
